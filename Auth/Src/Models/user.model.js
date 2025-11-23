@@ -9,15 +9,15 @@ const addressSchema = new mongoose.Schema({
 })
 
 const userSchema = new mongoose.Schema({
-    username:{type:String,require:true, unique:true},
+    username:{type:String,required:true, unique:true},
 
-    email:{type:String, require:true, unique:true},
+    email:{type:String, required:true, unique:true},
 
-    password:{type:String},
+    password:{type:String,Select:false},
 
     fullname:{
-        firstname:{type:String,require:true},
-        lastname:{type:String,require:true},
+        firstname:{type:String,required:true},
+        lastname:{type:String,required:true},
     },
 
     role:{type:String, enum:['user','admin'] },

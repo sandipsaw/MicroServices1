@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --runInBand --detectOpenHandles",
+    "test:watch":"jest --watch",
     "dev": "nodemon server.js"
   },
   "keywords": [],
@@ -24,9 +25,5 @@
     "mongodb-memory-server": "^8.16.1",
     "nodemon": "^3.1.11",
     "supertest": "^6.3.4"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "testTimeout": 20000
   }
 }

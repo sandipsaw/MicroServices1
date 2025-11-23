@@ -8,25 +8,25 @@ describe('POST /api/auth/register', () => {
         const res = await request(app)
             .post('/api/auth/register')
             .send({
-                username: 'john_doe',
-                email: 'john@example.com',
-                password: 'Secret123!',
-                fullname: { firstname: 'John', lastname: 'Doe' },
+                username: 'san_deep_71219',
+                email: 'sandip@example.com',
+                password: '$@ndip$@W71219',
+                fullname: { firstname: 'Sandip', lastname: 'saw' },
             });
 
         expect(res.status).toBe(201);
         expect(res.body.user).toBeDefined();
-        expect(res.body.user.username).toBe('john_doe');
-        expect(res.body.user.email).toBe('john@example.com');
+        expect(res.body.user.username).toBe('san_deep_71219');
+        expect(res.body.user.email).toBe('sandip@example.com');
         expect(res.body.user.password).toBeUndefined();
     });
 
-    it('rejects duplicate username/email with 409', async () => {
+    it('rejects duplicate username/email with 400', async () => {
         const payload = {
-            username: 'dupuser',
-            email: 'dup@example.com',
-            password: 'Secret123!',
-            fullname: { firstname: 'Dup', lastname: 'User' },
+            username: 'san_deep_71219',
+            email: 'sandip@example.com',
+            password: '$@ndip$@W71219',
+            fullname: { firstname: 'Sandip', lastname: 'saw' },
         };
 
         await request(app).post('/api/auth/register').send(payload).expect(201);

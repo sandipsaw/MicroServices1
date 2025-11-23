@@ -62,6 +62,83 @@ const registerUser = async (req, res) => {
     }
 }
 
+const loginUser = async (req, res) => {
+    const { identifier, password } = req.body;
+    try {
+        const user = await userModel.findOne({
+            $or: [{ username: identifier }, { email: identifier }]
+        }).select('+password');
+
+        if (!user) {
+            return res.status(401).json({ message: 'invalid credentials' });
+        }
+
+        const isValid = await bcrypt.compare(password, user.password);
+        if (!isValid) {
+            return res.status(401).json({ message: 'invalid credentials' });
+        }
+
+        const token = jwt.sign({
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            role: user.role
+        }, process.env.JWT_SECRET, { expiresIn: '1d' })
+
+        res.cookie('token', token, {
+            secure: true,
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000,
+        })
+
+        res.status(200).json({
+            message: 'user logged in successfully',
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                fullname: {
+                    firstname: user.fullname.firstname,
+                    lastname: user.fullname.lastname,
+                },
+                addresses: user.addresses
+            }
+        })
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'server error' })
+    }
+}
+
+const getMe = async (req, res) => {
+    try {
+        const user = req.user;
+        if (!user) return res.status(401).json({ message: 'unauthorized' });
+
+        res.status(200).json({
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                fullname: {
+                    firstname: user.fullname.firstname,
+                    lastname: user.fullname.lastname,
+                },
+                addresses: user.addresses
+            }
+        })
+    }
+    catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'server error' })
+    }
+}
+
 module.exports = {
-    registerUser
+    registerUser,
+    loginUser,
+    getMe
 }

@@ -32,4 +32,16 @@ const registerUserValidation = [
     responseWithValidationErrors
 ]
 
-module.exports = {registerUserValidation}
+const loginUserValidation = [
+    body('identifier')
+        .isString()
+        .withMessage('identifier must be a string (username or email)')
+        .notEmpty()
+        .withMessage('identifier is required'),
+    body('password')
+        .isLength({ min: 6 })
+        .withMessage('password must be atleast 6 character long'),
+    responseWithValidationErrors
+]
+
+module.exports = {registerUserValidation, loginUserValidation}

@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --runInBand --detectOpenHandles",
-    "test:watch":"jest --watch",
+    "test:watch": "jest --watch",
     "dev": "nodemon server.js"
   },
   "keywords": [],
@@ -17,6 +17,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-validator": "^7.3.1",
+    "ioredis": "^5.8.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.0.0"
   },

@@ -5,7 +5,7 @@ const redis = require('../db/redis')
 
 const registerUser = async (req, res) => {
 
-    const { username, email, password, fullname: { firstname, lastname }, role } = req.body;
+    const { username, email, password, fullname: { firstname, lastname }, role , addresses:{street,city,state,country,pin_code,phone} } = req.body;
 
     try {
         const isuser = await userModel.findOne({
@@ -25,6 +25,7 @@ const registerUser = async (req, res) => {
             email,
             password: hashPassword,
             fullname: { firstname, lastname },
+            addresses:{street,city,state,country,pin_code,phone},
             role
         })
 
@@ -53,13 +54,12 @@ const registerUser = async (req, res) => {
                     firstname: user.fullname.firstname,
                     lastname: user.fullname.lastname,
                 },
-                addresses: user.addresses
+                addresses:user.addresses
             }
         })
     }
     catch (error) {
         console.log(error);
-
     }
 }
 
@@ -158,10 +158,63 @@ const logoutUser = async (req, res) => {
 
 }
 
+const getAddresses = async (req, res) => {
+    try {
+        const user = req.user;
+        return res.status(200).json({ addresses: user.addresses });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'server error' });
+    }
+}
+
+const addAddress = async (req, res) => {
+    try {
+        const user = req.user;
+        const { street, city, state, pin_code, country, phone, isDefault } = req.body;
+
+        // if requested isDefault, unset other default flags
+        if (isDefault) {
+            user.addresses.forEach(a => { a.isDefault = false; });
+        }
+
+        const newAddress = { street, city, state, pin_code, country, phone, isDefault: !!isDefault };
+        if (user.addresses.length === 0 && typeof isDefault === 'undefined') newAddress.isDefault = true;
+
+        user.addresses.push(newAddress);
+        await user.save();
+        const created = user.addresses[user.addresses.length - 1];
+        return res.status(201).json({ addresses: created });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'server error' });
+    }
+}
+
+const deleteAddress = async (req, res) => {
+    try {
+        const user = req.user;
+        const { addressid } = req.params;
+        const addr = user.addresses.id(addressid);
+        if (!addr) return res.status(404).json({ message: 'address not found' });
+        // Mongoose subdoc remove() may not be available depending on how the doc is hydrated
+        // Use pull to remove by id for compatibility
+        user.addresses.pull(addressid);
+        await user.save();
+        return res.status(200).json({ message: 'address removed' });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'server error' });
+    }
+}
+
 module.exports = {
     registerUser,
     loginUser,
     getMe,
-    logoutUser
+    logoutUser,
+    getAddresses,
+    addAddress,
+    deleteAddress
 }
 

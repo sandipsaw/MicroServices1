@@ -44,4 +44,32 @@ const loginUserValidation = [
     responseWithValidationErrors
 ]
 
-module.exports = {registerUserValidation, loginUserValidation}
+const addAddressValidation = [
+    body('street')
+        .isString()
+        .withMessage('street must be a string')
+        .notEmpty()
+        .withMessage('street is required'),
+    body('city')
+        .isString()
+        .withMessage('city must be a string')
+        .notEmpty()
+        .withMessage('city is required'),
+    body('country')
+        .isString()
+        .withMessage('country must be a string')
+        .notEmpty()
+        .withMessage('country is required'),
+    body('pin_code')
+        .isString()
+        .withMessage('pin_code must be a string')
+        .matches(/^[0-9]{4,10}$/)
+        .withMessage('pin_code must be numeric and 4 to 10 digits'),
+    body('phone')
+        .optional()
+        .isMobilePhone('any')
+        .withMessage('phone must be a valid mobile phone'),
+    responseWithValidationErrors
+]
+
+module.exports = { registerUserValidation, loginUserValidation, addAddressValidation };

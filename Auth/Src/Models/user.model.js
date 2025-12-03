@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
         lastname:{type:String,required:true},
     },
 
-    role:{type:String, enum:['user','admin'] },
+    role:{type:String, enum:['user','seller'] },
 
     addresses :[ addressSchema ]
 })

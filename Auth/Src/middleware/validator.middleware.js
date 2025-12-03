@@ -1,9 +1,9 @@
 const { body, validationResult } = require('express-validator');
 
-const responseWithValidationErrors = (req,res,next) =>{
+const responseWithValidationErrors = (req, res, next) => {
     const error = validationResult(req);
-    if(!error.isEmpty()){
-        return res.status(400).json({errors:error.array() })
+    if (!error.isEmpty()) {
+        return res.status(400).json({ errors: error.array() })
     }
     next();
 }
@@ -29,6 +29,10 @@ const registerUserValidation = [
         .withMessage('lastname must be string')
         .notEmpty()
         .withMessage('lastname is required'),
+    body('role')
+        .optional()
+        .isIn(['user', 'seller'])
+        .withMessage('role must be either user or seller'),
     responseWithValidationErrors
 ]
 

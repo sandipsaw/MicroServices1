@@ -12,6 +12,16 @@ describe('POST /api/auth/register', () => {
                 email: 'sandip@example.com',
                 password: '$@ndip$@W71219',
                 fullname: { firstname: 'Sandip', lastname: 'saw' },
+                role: 'user',
+                addresses: {
+                    street: 'tetul talab',
+                    city: 'chirkunda',
+                    state: 'jharkhand',
+                    country: 'india',
+                    pin_code: '828202',
+                    phone: 8102466216,
+                    isDefault: false,
+                }
             });
 
         expect(res.status).toBe(201);
@@ -27,6 +37,16 @@ describe('POST /api/auth/register', () => {
             email: 'sandip@example.com',
             password: '$@ndip$@W71219',
             fullname: { firstname: 'Sandip', lastname: 'saw' },
+            role: 'user',
+            addresses: {
+                street: 'tetul talab',
+                city: 'chirkunda',
+                state: 'jharkhand',
+                country: 'india',
+                pin_code: '828202',
+                phone: 8102466216,
+                isDefault: false,
+            }
         };
 
         await request(app).post('/api/auth/register').send(payload).expect(201);

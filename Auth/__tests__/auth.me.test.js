@@ -6,7 +6,17 @@ describe('GET /api/auth/me', () => {
         username: 'san_deep_71219',
         email: 'sandip@example.com',
         password: '$@ndip$@W71219',
-        fullname: { firstname: 'Sandip', lastname: 'saw' }
+        fullname: { firstname: 'Sandip', lastname: 'saw' },
+        role: 'user',
+        addresses: {
+            street: 'tetul talab',
+            city: 'chirkunda',
+            state: 'jharkhand',
+            country: 'india',
+            pin_code: '828202',
+            phone: 8102466216,
+            isDefault: false,
+        }
     }
 
     it('returns current user for valid token cookie', async () => {

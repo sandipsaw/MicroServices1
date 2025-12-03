@@ -4,9 +4,7 @@ const jwt = require('jsonwebtoken')
 const redis = require('../db/redis')
 
 const registerUser = async (req, res) => {
-
-    const { username, email, password, fullname: { firstname, lastname }, role , addresses:{street,city,state,country,pin_code,phone} } = req.body;
-
+    const { username, email, password, fullname: { firstname, lastname }, role , addresses : {street,city,state,country,pin_code,phone,isDefault}} = req.body;
     try {
         const isuser = await userModel.findOne({
             $or: [{ username }, { email }]
@@ -25,8 +23,8 @@ const registerUser = async (req, res) => {
             email,
             password: hashPassword,
             fullname: { firstname, lastname },
-            addresses:{street,city,state,country,pin_code,phone},
-            role
+            role,
+            addresses:{street,city,state,country,pin_code,phone,isDefault}
         })
 
 
@@ -54,12 +52,13 @@ const registerUser = async (req, res) => {
                     firstname: user.fullname.firstname,
                     lastname: user.fullname.lastname,
                 },
-                addresses:user.addresses
+                addresses: user.addresses
             }
         })
     }
     catch (error) {
-        console.log(error);
+        console.error('registerUser error:', error);
+        return res.status(500).json({ message: error?.message || 'server error' });
     }
 }
 
@@ -161,7 +160,10 @@ const logoutUser = async (req, res) => {
 const getAddresses = async (req, res) => {
     try {
         const user = req.user;
-        return res.status(200).json({ addresses: user.addresses });
+        return res.status(200).json({ 
+            message:"user address fetched successfully",
+            addresses: user.addresses
+         });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ message: 'server error' });
@@ -184,7 +186,7 @@ const addAddress = async (req, res) => {
         user.addresses.push(newAddress);
         await user.save();
         const created = user.addresses[user.addresses.length - 1];
-        return res.status(201).json({ addresses: created });
+        return res.status(201).json({ address: created });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ message: 'server error' });

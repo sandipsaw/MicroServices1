@@ -6,7 +6,17 @@ describe('GET /api/auth/logout', () => {
         username: 'logout_user_1',
         email: 'logout_user_1@example.com',
         password: 'Password123',
-        fullname: { firstname: 'Logout', lastname: 'User' }
+        fullname: { firstname: 'Logout', lastname: 'User' },
+        role: 'user',
+        addresses: {
+            street: 'tetul talab',
+            city: 'chirkunda',
+            state: 'jharkhand',
+            country: 'india',
+            pin_code: '828202',
+            phone: 8102466216,
+            isDefault: false,
+        }
     }
 
     it('clears cookie and returns 200 when user is logged in', async () => {

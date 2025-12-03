@@ -6,7 +6,17 @@ describe('Addresses API', () => {
         username: 'address_user_1',
         email: 'address_user1@example.com',
         password: 'Passw0rd!23',
-        fullname: { firstname: 'Address', lastname: 'User' }
+        fullname: { firstname: 'Address', lastname: 'User' },
+        role: 'user',
+        addresses: {
+            street: 'tetul talab',
+            city: 'chirkunda',
+            state: 'jharkhand',
+            country: 'india',
+            pin_code: '828202',
+            phone: 8102466216,
+            isDefault: false,
+        }
     }
 
     const address1 = {
@@ -15,7 +25,8 @@ describe('Addresses API', () => {
         state: 'IL',
         pin_code: '62704',
         country: 'USA',
-        phone: '1234567890'
+        phone: '1234567890',
+        isDefault: true
     }
 
     const address2 = {
@@ -57,7 +68,7 @@ describe('Addresses API', () => {
 
         expect(res.body.addresses).toBeDefined();
         expect(Array.isArray(res.body.addresses)).toBe(true);
-        expect(res.body.addresses.length).toBe(2);
+        expect(res.body.addresses.length).toBe(3);
         // Check that one of the addresses is marked as default (address2)
         const defaults = res.body.addresses.filter(a => a.isDefault === true);
         expect(defaults.length).toBe(1);
@@ -85,7 +96,7 @@ describe('Addresses API', () => {
             .get('/api/auth/users/me/addresses')
             .set('Cookie', tokenCookie)
             .expect(200);
-        expect(getRes.body.addresses[0].isDefault).toBe(true);
+        expect(getRes.body.addresses[0].isDefault).toBe(false);
 
         // Invalid pin_code (non-numeric) should return 400
         const invalidPinPayload = { ...address1, pin_code: 'abcd' };
@@ -130,7 +141,7 @@ describe('Addresses API', () => {
 
         // Confirm it exists
         let getRes = await request(app).get('/api/auth/users/me/addresses').set('Cookie', tokenCookie).expect(200);
-        expect(getRes.body.addresses.length).toBe(1);
+        expect(getRes.body.addresses.length).toBe(2);
 
         // Delete it
         const delRes = await request(app).delete(`/api/auth/users/me/addresses/${addrId}`).set('Cookie', tokenCookie).expect(200);
@@ -138,7 +149,7 @@ describe('Addresses API', () => {
 
         // Confirm it's removed
         getRes = await request(app).get('/api/auth/users/me/addresses').set('Cookie', tokenCookie).expect(200);
-        expect(getRes.body.addresses.length).toBe(0);
+        expect(getRes.body.addresses.length).toBe(1);
 
         // Deleting a non-existent address returns 404
         await request(app).delete(`/api/auth/users/me/addresses/${addrId}`).set('Cookie', tokenCookie).expect(404);

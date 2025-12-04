@@ -1,91 +1,65 @@
-const request = require('supertest');
-const fs = require('fs');
 const path = require('path');
+const request = require('supertest');
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 
-// mock imagekit module to avoid network calls
-jest.mock('imagekit', () => {
-  return jest.fn().mockImplementation(function () {
-    // attach upload on this (as a class instance would have it)
-    this.upload = jest.fn().mockResolvedValue({
-      url: 'https://ik.test/demo.png',
-      fileId: 'file_123',
-      thumbnail: 'https://ik.test/demo_thumb.png',
-    });
-  });
-});
-
-// mock model
-jest.mock('../Src/model/product.model', () => ({
-  create: jest.fn().mockImplementation((payload) => Promise.resolve({ _id: 'testid', ...payload })),
+jest.mock('../src/services/imagekit.service', () => ({
+    uploadImage: jest.fn(async ({ filename }) => ({
+        url: `https://ik.mock/${filename}`,
+        thumbnail: `https://ik.mock/thumb/${filename}`,
+        id: `file_${filename}`,
+    })),
 }));
 
-const app = require('../Src/app');
-const ImageKit = require('imagekit');
-const productModel = require('../Src/model/product.model');
+const app = require('../Src/app')
 
-describe('POST /api/product', () => {
-  it('should upload image via ImageKit and save product', async () => {
-    // prepare a small Buffer as file
-    const testImagePath = path.join(__dirname, 'fixtures', 'test.png');
+describe('POST /api/products', () => {
+    let mongo;
 
-    const res = await request(app)
-      .post('/api/product')
-      .field('title', 'Test Product')
-      .field('description', 'A nice item')
-      .field('price', '99')
-      .field('currency', 'USD')
-      .field('seller', '60f8c9b8e1d3a4b5c6d7e8f9')
-      .attach('image', testImagePath)
+    beforeAll(async () => {
+        mongo = await MongoMemoryServer.create();
+            const uri = mongo.getUri();
+            process.env.MONGODB_URI = uri;
+        process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
+        await mongoose.connect(uri);
+    });
 
-    expect(res.status).toBe(201);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.title).toBe('Test Product');
+    afterAll(async () => {
+        await mongoose.connection.dropDatabase();
+        await mongoose.connection.close();
+        await mongo.stop();
+    });
 
-    // ImageKit upload should be called
-    // The mocked constructor should have been called and an instance created with upload function
-    expect(ImageKit.mock).toBeDefined();
-    expect(ImageKit.mock.instances.length).toBeGreaterThan(0);
-    const instance = ImageKit.mock.instances[0];
-    // debug: dump instance
-    expect(typeof instance.upload).toBe('function');
-    // debug logs removed
-    // Check that ImageKit.upload was called with base64 file string and name
-    const callArg = instance.upload.mock.calls[0][0];
-    expect(callArg.fileName).toBe('test.png');
-    // base64 of 'hello world'
-    expect(callArg.file).toBe('aGVsbG8gd29ybGQ=');
-    expect(instance.upload).toHaveBeenCalled();
+    afterEach(async () => {
+        const collections = await mongoose.connection.db.collections();
+        for (const c of collections) await c.deleteMany({});
+    });
 
-    // productModel.create should be called with the values
-    expect(productModel.create).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Test Product',
-      description: 'A nice item',
-      price: { amount: '99', currency: 'USD' },
-      seller: '60f8c9b8e1d3a4b5c6d7e8f9',
-    }));
-  });
+    it('creates a product and uploads images', async () => {
+        const token = jwt.sign({ id: new mongoose.Types.ObjectId().toHexString(), role: 'seller' }, process.env.JWT_SECRET);
+        const res = await request(app)
+            .post('/api/product')
+            .set('Authorization', `Bearer ${token}`)
+            .field('title', 'Test Product')
+            .field('description', 'Nice one')
+            .field('priceAmount', '99.99')
+            .field('priceCurrency', 'USD')
+            .attach('images', path.join(__dirname, 'fixtures', 'sample.jpg'));
 
-  afterEach(() => {
-    jest.resetAllMocks();
-  });
+        expect(res.status).toBe(201);
+        expect(res.body?.data?.title).toBe('Test Product');
+        expect(res.body?.data?.price?.amount).toBe(99.99);
+        expect(res.body?.data?.image?.length).toBe(1);
+        expect(res.body?.data?.image[ 0 ]?.url).toContain('https://ik.mock/');
+    });
 
-  it('should create product without file', async () => {
-    const res = await request(app)
-      .post('/api/product')
-      .field('title', 'Test Product')
-      .field('description', 'A nice item')
-      .field('price', '99')
-      .field('currency', 'USD')
-      .field('seller', '60f8c9b8e1d3a4b5c6d7e8f9');
-
-    expect(res.status).toBe(201);
-    expect(res.body.success).toBe(true);
-    expect(productModel.create).toHaveBeenCalled();
-    expect(productModel.create.mock.calls[0][0].image || []).toEqual([]);
-    // ImageKit.upload should not be called in this case
-    const i = ImageKit.mock.instances[0];
-    if (i) {
-      expect(i.upload).not.toHaveBeenCalled();
-    }
-  });
+    it('validates required fields', async () => {
+        const token = jwt.sign({ id: new mongoose.Types.ObjectId().toHexString(), role: 'seller' }, process.env.JWT_SECRET);
+        const res = await request(app)
+            .post('/api/product')
+            .set('Authorization', `Bearer ${token}`)
+            .field('title', 'X');
+        expect(res.status).toBe(400);
+    });
 });

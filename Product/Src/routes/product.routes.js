@@ -13,6 +13,8 @@ const upload = multer({ storage });
 router.post('/',createAuthMiddleware(['admin','seller']), upload.array('images',5),createProductValidators,productController.createProduct);
 
 router.get('/',productController.getProduct)
+router.patch('/:id',createAuthMiddleware(['seller']),productController.updateProduct)
+router.delete('/:id',createAuthMiddleware(['seller']),productController.deleteProduct)
+router.get('/seller',createAuthMiddleware(['seller']),productController.getSellerProduct)
 router.get('/:id',productController.getProductById)
-
 module.exports = router
